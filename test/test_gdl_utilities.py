@@ -126,17 +126,7 @@ class TestGDLUtilities(unittest.TestCase):
 
     def test_convert_gsm_archicad_versions(self) -> None:
         _tests = [
-            # {
-            #     # Standard Logic test
-            #     "args":{
-            #         "path":file("sandbox/Armchair 01 25.gsm", is_dir=False, script_dir=True).abspath(),
-            #         "source_version":25,
-            #         "dest_version":23,
-            #         "password":"neilsmith",
-            #         "show_progress":True,
-            #     },
-            #     "answer":GSMConvertSuccess,
-            # },
+
         ]
 
         self.conduct_tests(

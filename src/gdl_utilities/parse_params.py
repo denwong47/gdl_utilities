@@ -10,7 +10,6 @@ from tqdm import tqdm
 import collections
 
 from file_io import file
-from essentials import dict_iter
 
 dir_path = "./XMLs"
 object_type_var = "ap_objectType"
@@ -77,7 +76,7 @@ def parseParametersInDir(dir_path):
     }
 
     _pbar = tqdm(total=len(_dir_tree))
-    for _file_path, _file in dict_iter(_dir_tree):
+    for _file_path, _file in zip(_dir_tree, _dir_tree.values()):
         _pbar.set_description(f"Processing {_file_path}...")
         if (_file_path.lower().endswith(".xml")):
             _xml = _file.read(output=str)

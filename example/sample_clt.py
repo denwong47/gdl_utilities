@@ -4,7 +4,7 @@ import logging
 
 import gdl_utilities
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 _conn = gdl_utilities.ac_connector
 logging.debug(f"AC Connector is a [{type(_conn).__name__}] object.")
@@ -48,10 +48,10 @@ if (_conn.alive):
 
     logging.debug(f"Type Mapping generated:\n{json.dumps(_type_map, indent=4, default=str)}")
 
-    _df['CLT FABRICATION>>>Notes for element'] = ""
+    # _df['CLT FABRICATION>>>Notes for element'] = ""
     _df['WORKFLOW>>>Status'] = "Proposed, ordered pending delivery"
     _df['WORKFLOW>>>Projected Leadtime (days)'] = _df.apply(lambda _row: 18+_row['CLT FABRICATION>>>LOR-No.']*2, axis=1)
-    # _df['CLT FABRICATION>>>Notes for element'] = _df.apply(lambda _row: f"{_row['CLT FABRICATION>>>Label']} approved for Manufacture 2022-03-01, DW. To be delivered on 2022-03-{19+_row['CLT FABRICATION>>>LOR-No.']*2}.", axis=1)
+    _df['CLT FABRICATION>>>Notes for element'] = _df.apply(lambda _row: f"{_row['CLT FABRICATION>>>Label']} approved for Manufacture 2022-03-01, DW. To be delivered on 2022-03-{19+_row['CLT FABRICATION>>>LOR-No.']*2}.", axis=1)
 
     logging.info("Pushing data to ArchiCAD...")
     _summary = _conn.summarise_transaction_results(

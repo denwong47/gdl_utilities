@@ -45,13 +45,13 @@ class PropertyValue(dict):
 	
 	Commonly has a structure of
 	{
-	"constructor":class,
-	"value": [Scalar Value
-	OR
-	In case of Enums: PropertyValue],
-	"args":{
-	[...kwargs to feed into constructor]
-	}
+		"constructor":class,
+		"value": [Scalar Value
+					OR
+				  In case of Enums: PropertyValue],
+		"args":{
+			[...kwargs to feed into constructor]
+		}
 	}
 	
 	The main point of this is for its .reconstruct() method, which allows for ElementPropertyValue to be rebuilt.
@@ -179,11 +179,11 @@ class PropertyValue(dict):
 					if (not isinstance(value, (list, tuple))):
 						value = [value, ]
 						
-						value = [
-							_value.reconstruct(value=_item) for _item in value
-						]
-					else:
-						value = _value.reconstruct(value=value)
+					value = [
+						_value.reconstruct(value=_item) for _item in value
+					]
+				else:
+					value = _value.reconstruct(value=value)
 			
 			_kwargs = self.get("args", {})
 			
@@ -278,22 +278,22 @@ class _PandasExt():
 				if (isinstance(_raw_value, np.generic)):
 					_raw_value = _raw_value.item()
 		
-					# This selects the propert_structure by column name; so if the DataFrame is trimmed down it will still function.
-					_property_value = self._obj.property_structure[self._obj.columns[_col_id]].reconstruct(
-						_raw_value
-					)
-					
-					if (not isinstance(_property_value, (
-						connector.types.NotAvailablePropertyValue,
-						connector.types.NotEvaluatedPropertyValue,
-					))):
-						_element_property_values.append(
-							connector.types.ElementPropertyValue(
-								_element_id,
-								_property_id,
-								_property_value
-							)
+				# This selects the property_structure by column name; so if the DataFrame is trimmed down it will still function.
+				_property_value = self._obj.property_structure[self._obj.columns[_col_id]].reconstruct(
+					_raw_value
+				)
+				
+				if (not isinstance(_property_value, (
+					connector.types.NotAvailablePropertyValue,
+					connector.types.NotEvaluatedPropertyValue,
+				))):
+					_element_property_values.append(
+						connector.types.ElementPropertyValue(
+							_element_id,
+							_property_id,
+							_property_value
 						)
+					)
 		
 		return _element_property_values
 	
@@ -304,6 +304,7 @@ class _PandasExt():
 		Push data to ArchiCAD.
 		"""
 		_element_property_values = self.element_property_values()
+
 		
 		return connector.commands.SetPropertyValuesOfElements(
 			_element_property_values
@@ -556,14 +557,14 @@ class connection():
 				if (class_date):
 					if (_class_date == class_date):
 						return _class
-					else:
-						# class_date not specified, go for highest date
-						if (_highest_date):
-							if (_highest_date < _class_date):
-								_highest_date = _class_date
-								_return = _class
-						else:
+				else:
+					# class_date not specified, go for highest date
+					if (_highest_date):
+						if (_highest_date < _class_date):
 							_highest_date = _class_date
+							_return = _class
+					else:
+						_highest_date = _class_date
 
 		return _return
 
@@ -584,7 +585,6 @@ class connection():
 		Different from FindClassificationItemInSystem that in returns ClassificationItemId instead of ClassificationItemInTree.
 		"""
 		
-
 		_return = None
 
 		if (isinstance(system, self.types.ClassificationSystem)):
@@ -614,24 +614,24 @@ class connection():
 					_element.elementId.guid for _element in _elements
 				]
 
-		if (join == "intersect"):
-			_new_return_elements = []
-		else:
-			_new_return_elements = _return_elements
+				if (join == "intersect"):
+					_new_return_elements = []
+				else:
+					_new_return_elements = _return_elements
 
-		for _element, _guid in zip(_elements, _guids):
-			if (
-				(_guid in _return_guids and join == "intersect") or \
-				(_guid not in _return_guids and join == "union")
-			):
-				_new_return_elements.append(_element)
+				for _element, _guid in zip(_elements, _guids):
+					if (
+						(_guid in _return_guids and join == "intersect") or \
+						(_guid not in _return_guids and join == "union")
+					):
+						_new_return_elements.append(_element)
 
 				_return_elements = _new_return_elements
 
-				# recalculate guids
-				_return_guids = [
-					_element.elementId.guid for _element in _return_elements
-				]
+			# recalculate guids
+			_return_guids = [
+				_element.elementId.guid for _element in _return_elements
+			]
 
 		return _return_elements
 
@@ -843,14 +843,15 @@ class connection():
 
 				_record[_key] = _value
 
-				_records.append(_record)
+			# Add to record at Element Level
+			_records.append(_record)
 
 		return _records, _type_map
 
 	def property_value_wrapper_to_dataframe(
 		self,
 		element_ids:List[archicad.Types.ElementId],
-		property_userids:List[archicad.Types.PropertyId],
+		property_userids:List[archicad.Types.PropertyUserId],
 		wrapper:archicad.Types.PropertyValuesWrapper,
 	)->ElementsPropertyValues:
 		"""
@@ -873,6 +874,23 @@ class connection():
 
 		return _df
 
+	@alive_only
+	def get_element_property_dataframe(
+		self,
+		element_ids:List[archicad.Types.ElementId],
+		property_userids:List[archicad.Types.PropertyUserId],
+	)->ElementsPropertyValues:
+		property_ids = self.commands.GetPropertyIds(property_userids)
+
+		return self.property_value_wrapper_to_dataframe(
+			element_ids,
+			property_userids,
+			self.commands.GetPropertyValuesOfElements(
+				element_ids,
+				property_ids,
+			),
+		)
+
 	def summarise_transaction_results(
 		self,
 		results:List[archicad.Types.ExecutionResult],
@@ -887,8 +905,8 @@ class connection():
 				_code = _result.error.code
 				_msg = _result.error.message
 
-				_key = (_code, _msg)
-				_summary[_key] = _summary.get(_key, 0) + 1
+			_key = (_code, _msg)
+			_summary[_key] = _summary.get(_key, 0) + 1
 
 		return _summary
 
