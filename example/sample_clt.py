@@ -4,7 +4,7 @@ import logging
 
 import gdl_utilities
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 _conn = gdl_utilities.ac_connector
 logging.debug(f"AC Connector is a [{type(_conn).__name__}] object.")
