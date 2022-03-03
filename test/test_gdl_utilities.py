@@ -19,6 +19,8 @@ from gdl_utilities.ac_commands import start_archicad, kill_archicad
 from gdl_utilities import ac_connector
 from gdl_utilities.ac_connection import GROUP_PROPERTY_SEPARATOR
 
+ARCHICAD_VERSION = 25
+
 TEST_PLN_FILE = "./sandbox/TEST-GDU-ZZ-ZZ-M3-A-0001_UnitTest.pln"
 TEST_PLN_LOCK = TEST_PLN_FILE + ".lck"
 
@@ -35,7 +37,7 @@ class TestGDLUtilities(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         global _ac_handler
-        
+
         super().setUpClass()
 
         os.chdir(os.path.dirname(sys.argv[0]))
@@ -46,7 +48,7 @@ class TestGDLUtilities(unittest.TestCase):
 
             if (os.path.exists(TEST_PLN_FILE)):
                 _ac_handler = start_archicad(
-                    25,
+                    ARCHICAD_VERSION,
                     "./sandbox/TEST-GDU-ZZ-ZZ-M3-A-0001_UnitTest.pln"
                 )
             else:
