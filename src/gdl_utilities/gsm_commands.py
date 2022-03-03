@@ -211,7 +211,7 @@ def convert_gsm_archicad_versions(
     if (_temp.isreadable()):
         _temp.delete()
 
-    print (_return)
+    # print (_return)
     return _return
 
 

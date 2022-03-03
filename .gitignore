@@ -120,3 +120,5 @@ dmypy.json
 # Project Specific
 *.tmp
 ._*.*
+*.pln.lck
+*.bpn
