@@ -174,7 +174,7 @@ class TestGDLUtilities(unittest.TestCase):
         )):
             # ArchiCAD report itself as live.
             # Normally it will still be loading stuff for a while; so lets wait around for a bit more.
-            timer.sleep(16)
+            # timer.sleep(16)
 
             """
             Fetch Uniclass Classification
