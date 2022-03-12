@@ -1,6 +1,5 @@
 import os, sys
 
-import unittest
 
 from datetime import datetime
 import random
@@ -18,6 +17,10 @@ from gdl_utilities.gsm_commands import convert_operation, convert_library_parts,
 from gdl_utilities.ac_commands import start_archicad, kill_archicad
 from gdl_utilities import ac_connector
 from gdl_utilities.ac_connection import GROUP_PROPERTY_SEPARATOR
+
+import quicktest
+unittest = quicktest
+
 
 ARCHICAD_VERSION = 25
 
@@ -42,17 +45,18 @@ class TestGDLUtilities(unittest.TestCase):
 
         os.chdir(os.path.dirname(sys.argv[0]))
 
-        if (not ac_connector.alive):
-            if (os.path.exists(TEST_PLN_LOCK)):
-                os.remove(TEST_PLN_LOCK)
+        if (ac_connector):
+            if (not ac_connector.alive):
+                if (os.path.exists(TEST_PLN_LOCK)):
+                    os.remove(TEST_PLN_LOCK)
 
-            if (os.path.exists(TEST_PLN_FILE)):
-                _ac_handler = start_archicad(
-                    ARCHICAD_VERSION,
-                    "./sandbox/TEST-GDU-ZZ-ZZ-M3-A-0001_UnitTest.pln"
-                )
-            else:
-                print(f"Test PLN file [{TEST_PLN_FILE}] not found. Check working directory.")
+                if (os.path.exists(TEST_PLN_FILE)):
+                    _ac_handler = start_archicad(
+                        ARCHICAD_VERSION,
+                        "./sandbox/TEST-GDU-ZZ-ZZ-M3-A-0001_UnitTest.pln"
+                    )
+                else:
+                    print(f"Test PLN file [{TEST_PLN_FILE}] not found. Check working directory.")
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -65,53 +69,6 @@ class TestGDLUtilities(unittest.TestCase):
 
     def tearDown(self):
         pass
-
-    def conduct_tests(
-        self,
-        func,
-        tests:dict,
-        ):
-
-        for _test in tests:
-            if (issubclass(_test["answer"], Exception) if (isinstance(_test["answer"], type)) else False):
-                with self.assertRaises(Exception) as context:
-                    func(
-                        **_test["args"]
-                    )
-
-                self.assertTrue(isinstance(context.exception, _test["answer"]))
-            elif (isinstance(_test["answer"], type)):
-                self.assertTrue(isinstance(func(**_test["args"]), _test["answer"]))
-            elif (isinstance(_test["answer"], np.ndarray)):
-                if (_test["answer"].dtype in (
-                    np.float_,
-                    np.float16,
-                    np.float32,
-                    np.float64,
-                    np.float128,
-                    np.longfloat,
-                    np.half,
-                    np.single,
-                    np.double,
-                    np.longdouble,
-                )):
-                    _assertion = np.testing.assert_allclose
-                else:
-                    _assertion = np.testing.assert_array_equal
-
-                _assertion(
-                    func(
-                        **_test["args"]
-                    ),
-                    _test["answer"],
-                )
-            else:
-                self.assertEqual(
-                    func(
-                        **_test["args"]
-                    ),
-                    _test["answer"],
-                )
     
     def test_convert_library_parts(self) -> None:
 
@@ -169,177 +126,182 @@ class TestGDLUtilities(unittest.TestCase):
 
     def test_ac_connector(self) -> None:
         
-        if (ac_connector.wait_till_alive(
-            timeout=180
-        )):
-            # ArchiCAD report itself as live.
-            # Normally it will still be loading stuff for a while; so lets wait around for a bit more.
-            # timer.sleep(16)
+        if (ac_connector):
+            if (ac_connector.wait_till_alive(
+                timeout=180
+            )):
+                # ArchiCAD report itself as live.
+                # Normally it will still be loading stuff for a while; so lets wait around for a bit more.
+                # timer.sleep(16)
 
-            """
-            Fetch Uniclass Classification
-            And check type
-            """
+                """
+                Fetch Uniclass Classification
+                And check type
+                """
 
-            _uniclass2015 = ac_connector.find_classification_system("Uniclass 2015")
-            self.assertIsInstance(_uniclass2015, ac_connector.types.ClassificationSystem)
+                _uniclass2015 = ac_connector.find_classification_system("Uniclass 2015")
+                self.assertIsInstance(_uniclass2015, ac_connector.types.ClassificationSystem)
 
 
-            """
-            Fetch Uniclass Classification Items
-            And check type
-            """
+                """
+                Fetch Uniclass Classification Items
+                And check type
+                """
 
-            _chair_class = ac_connector.find_classification(_uniclass2015, "Pr_40_50_12_71")
-            _piano_class = ac_connector.find_classification(_uniclass2015, "Pr_40_30_55")
-            _fridge_class = ac_connector.find_classification(_uniclass2015, "Ss_40_15_25")
-            _wall_class = ac_connector.find_classification(_uniclass2015, "EF_25_10")
-            self.assertIsInstance(_chair_class, ac_connector.types.ClassificationItemId)
-            self.assertIsInstance(_piano_class, ac_connector.types.ClassificationItemId)
-            self.assertIsInstance(_fridge_class, ac_connector.types.ClassificationItemId)
-            self.assertIsInstance(_wall_class, ac_connector.types.ClassificationItemId)
+                _chair_class = ac_connector.find_classification(_uniclass2015, "Pr_40_50_12_71")
+                _piano_class = ac_connector.find_classification(_uniclass2015, "Pr_40_30_55")
+                _fridge_class = ac_connector.find_classification(_uniclass2015, "Ss_40_15_25")
+                _wall_class = ac_connector.find_classification(_uniclass2015, "EF_25_10")
+                self.assertIsInstance(_chair_class, ac_connector.types.ClassificationItemId)
+                self.assertIsInstance(_piano_class, ac_connector.types.ClassificationItemId)
+                self.assertIsInstance(_fridge_class, ac_connector.types.ClassificationItemId)
+                self.assertIsInstance(_wall_class, ac_connector.types.ClassificationItemId)
 
-            
+                
 
-            """
-            Fetch Elements using Classification Items and Object Types
+                """
+                Fetch Elements using Classification Items and Object Types
 
-            Then check against anticipated count
-            """
+                Then check against anticipated count
+                """
 
-            _chair_count = 162
-            _piano_count = 32
-            _fridge_count = 144
-            _wall_count = 4
+                _chair_count = 162
+                _piano_count = 32
+                _fridge_count = 144
+                _wall_count = 4
 
-            _chair_elements = list(ac_connector.iter_elements(
-                classification=_chair_class,
-                element_type="Object",
-            ))
-            self.assertEqual(len(_chair_elements), _chair_count)
+                _chair_elements = list(ac_connector.iter_elements(
+                    classification=_chair_class,
+                    element_type="Object",
+                ))
+                self.assertEqual(len(_chair_elements), _chair_count)
 
-            _piano_elements = list(ac_connector.iter_elements(
-                classification=_piano_class,
-                element_type="Object",
-            ))
-            self.assertEqual(len(_piano_elements), _piano_count)
+                _piano_elements = list(ac_connector.iter_elements(
+                    classification=_piano_class,
+                    element_type="Object",
+                ))
+                self.assertEqual(len(_piano_elements), _piano_count)
 
-            _fridge_elements = list(ac_connector.iter_elements(
-                classification=_fridge_class,
-                element_type="Object",
-            ))
-            self.assertEqual(len(_fridge_elements), _fridge_count)
+                _fridge_elements = list(ac_connector.iter_elements(
+                    classification=_fridge_class,
+                    element_type="Object",
+                ))
+                self.assertEqual(len(_fridge_elements), _fridge_count)
 
-            _wall_elements = list(ac_connector.iter_elements(
-                classification=_wall_class,
-                element_type="Wall", # These are walls!
-            ))
-            self.assertEqual(len(_wall_elements), _wall_count)
-            
+                _wall_elements = list(ac_connector.iter_elements(
+                    classification=_wall_class,
+                    element_type="Wall", # These are walls!
+                ))
+                self.assertEqual(len(_wall_elements), _wall_count)
+                
 
-            
-            """
-            Generate Property User Ids
-            And check counts
-            """
-            _count_prop_identity_userid = 15
-            _count_prop_testgroup_userid = 6
+                
+                """
+                Generate Property User Ids
+                And check counts
+                """
+                _count_prop_identity_userid = 15
+                _count_prop_testgroup_userid = 6
 
-            _prop_identity_userid = list(
-                ac_connector.find_properties_userid_by_group((None, "IdAndCategories"), True)
-            )
-            _prop_testgroup_userid = list(
-                ac_connector.find_properties_userid_by_group("Test Group", False)
-            )
-
-            self.assertEqual(len(_prop_identity_userid), _count_prop_identity_userid)
-            self.assertEqual(len(_prop_testgroup_userid), _count_prop_testgroup_userid)
-
-            _all_props = _prop_identity_userid + _prop_testgroup_userid
-
-            """
-            Element Properties
-            Check Shape
-            """
-            get_chair_props = lambda : ac_connector.get_element_property_dataframe(
-                _chair_elements,
-                _all_props,
-            )
-
-            _chair_df_ac = get_chair_props()
-
-            self.assertEqual(
-                _chair_df_ac.shape,
-                (
-                    _chair_count,
-                    _count_prop_identity_userid+_count_prop_testgroup_userid,
+                _prop_identity_userid = list(
+                    ac_connector.find_properties_userid_by_group((None, "IdAndCategories"), True)
                 )
-            )
-
-
-
-            """
-            Randomise Values
-            """
-
-            _enum_options = [
-                "Option 1",
-                "Option 2",
-                "Option 3",
-                "Option 4",
-                "Option 5",
-            ]
-        
-            def _randomise(row):
-                row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}Last Populated"]          =   datetime.utcnow().isoformat()
-                row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}String Property"]         =   secrets.token_urlsafe(200)
-                row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}Integer Property"]        =   secrets.randbelow(65535)
-                row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}Float Property"]          =   secrets.randbelow(65535) / (1+secrets.randbelow(255))
-                row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}Single Enum Property"]    =   secrets.choice(_enum_options)
-                row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}Multiple Enum Property"]  =   random.sample(
-                    population = _enum_options,
-                    k = secrets.randbelow(len(_enum_options)),
+                _prop_testgroup_userid = list(
+                    ac_connector.find_properties_userid_by_group("Test Group", False)
                 )
-                return row
 
-            _chair_df_new = _chair_df_ac.apply(
-                _randomise,
-                axis=1
-            )
-            # _chair_df_new.property_structure = _chair_df.property_structure
+                self.assertEqual(len(_prop_identity_userid), _count_prop_identity_userid)
+                self.assertEqual(len(_prop_testgroup_userid), _count_prop_testgroup_userid)
+
+                _all_props = _prop_identity_userid + _prop_testgroup_userid
+
+                """
+                Element Properties
+                Check Shape
+                """
+                get_chair_props = lambda : ac_connector.get_element_property_dataframe(
+                    _chair_elements,
+                    _all_props,
+                )
+
+                _chair_df_ac = get_chair_props()
+
+                self.assertEqual(
+                    _chair_df_ac.shape,
+                    (
+                        _chair_count,
+                        _count_prop_identity_userid+_count_prop_testgroup_userid,
+                    )
+                )
+
+
+
+                """
+                Randomise Values
+                """
+
+                _enum_options = [
+                    "Option 1",
+                    "Option 2",
+                    "Option 3",
+                    "Option 4",
+                    "Option 5",
+                ]
             
+                def _randomise(row):
+                    row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}Last Populated"]          =   datetime.utcnow().isoformat()
+                    row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}String Property"]         =   secrets.token_urlsafe(200)
+                    row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}Integer Property"]        =   secrets.randbelow(65535)
+                    row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}Float Property"]          =   secrets.randbelow(65535) / (1+secrets.randbelow(255))
+                    row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}Single Enum Property"]    =   secrets.choice(_enum_options)
+                    row[f"TEST GROUP{GROUP_PROPERTY_SEPARATOR}Multiple Enum Property"]  =   random.sample(
+                        population = _enum_options,
+                        k = secrets.randbelow(len(_enum_options)),
+                    )
+                    return row
 
-            # print(_chair_df_new.iloc[0, :])
-            """
-            Push to ArchiCAD
-            """
-            _return = _chair_df_new.export.to_archicad()
+                _chair_df_new = _chair_df_ac.apply(
+                    _randomise,
+                    axis=1
+                )
+                # _chair_df_new.property_structure = _chair_df.property_structure
+                
 
-            _result = ac_connector.summarise_transaction_results(
-                _return
-            )
-            
-            self.assertTrue(
-                (0, "Success") in _result.keys()
-            )
+                # print(_chair_df_new.iloc[0, :])
+                """
+                Push to ArchiCAD
+                """
+                _return = _chair_df_new.export.to_archicad()
 
-            """
-            Load DataFrame back from ArchiCAD
-            and assert equal to what we injected
-            """
-            _chair_df_ac = get_chair_props()
+                _result = ac_connector.summarise_transaction_results(
+                    _return
+                )
+                
+                self.assertTrue(
+                    (0, "Success") in _result.keys()
+                )
 
-            pd.testing.assert_frame_equal(
-                _chair_df_ac,
-                _chair_df_new
-            )
+                """
+                Load DataFrame back from ArchiCAD
+                and assert equal to what we injected
+                """
+                _chair_df_ac = get_chair_props()
 
+                pd.testing.assert_frame_equal(
+                    _chair_df_ac,
+                    _chair_df_new
+                )
+
+            else:
+                # ArchiCAD is still not live after 3 minutes
+                warnings.warn(
+                    RuntimeWarning(
+                        "ArchiCAD did not come alive in time for unittest to run; skipping test."
+                    )
+                )
         else:
-            # ArchiCAD is still not live after 3 minutes
-            warnings.warn(
-                RuntimeWarning(
-                    "ArchiCAD did not come alive in time for unittest to run; skipping test."
-                )
+            self.fail(
+                str(ac_connector)
             )
 
 if __name__ == "__main__":

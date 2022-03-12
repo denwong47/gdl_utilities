@@ -5,13 +5,10 @@ import time as timer
 from typing import Any, Dict, Generator, Iterable, List, Tuple, Union
 from types import ModuleType
 
-# try:
-# from tqdm import tqdm
-# except (ImportError, ModuleNotFoundError):
-# tqdm = lambda x: x
-
 import numpy as np
 import pandas as pd
+
+from fakemodule import ModuleUnavailable
 
 BUILTIN_GROUP_NAME = "Built-in Properties"
 GROUP_PROPERTY_SEPARATOR = ">>>"
@@ -24,14 +21,16 @@ GUID_COLUMN_NAME = "element_guid"
 try:
 	import archicad
 	from archicad import ACConnection
-except (ImportError, ModuleNotFoundError):
-	archicad = None
-	ACConnection = None
+except (ImportError, ModuleNotFoundError) as e:
+	archicad = ModuleUnavailable(e)
+	ACConnection = ModuleUnavailable(e)
 
 class ACConnectionModuleNotFound(ModuleNotFoundError):
 	def __bool__(self):
 		return False
 	__nonzero__ = __bool__
+
+	alive = False
 	
 class ACConnectionFailed(RuntimeError):
 	def __bool__(self):
@@ -395,7 +394,7 @@ class connection():
 
 			return cls._instance
 		else:
-			return ACConnectionModuleNotFound("archicad Module cannot be imported - check that it is installed in the current environment through 'python3 -m pip instal archicad'.")
+			return ACConnectionModuleNotFound("archicad Module cannot be imported - check that it is installed in the current environment through 'python3 -m pip install archicad'.")
 
 	def __init__(self):
 		if (not self.alive):
