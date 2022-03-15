@@ -10,7 +10,8 @@ from file_io import file
 import gdl_utilities.xml
 import shell
 
-
+_default_version = 25
+_default_destversion = 23
 
 class GSMConvertShellError(RuntimeError):
     def __bool__(self):
@@ -79,7 +80,7 @@ class convert_operation(enum.Enum):
 
 def render_command(
     source_path:str,
-    version:int=25,
+    version:int=_default_version,
     command:str="l2x",
     password:str=None,
     dest_path:str=None,
@@ -92,7 +93,7 @@ def render_command(
         dest_path = source_path.replace(".xml", ".gsm")
 
     if (not version in versions_available):
-        version = 25
+        version = _default_version
 
     if (password is not None):
         password = f" -password {shlex.quote(password):s}"
@@ -115,7 +116,7 @@ def render_command(
 
 def execute_command(
     source_path:str,
-    version:int=25,
+    version:int=_default_version,
     command:str="l2x",
     password:str="",
     dest_path:str=None,
@@ -140,7 +141,9 @@ def execute_command(
     else:
         return GSMConvertSuccess(version=version, dest_path=dest_path)
 
-def change_gsm_versions(path:str, dest_version:int=23):
+
+
+def change_gsm_versions(path:str, dest_version:int=_default_destversion):
     _xmlfile = file(path, is_dir=False)
     _contents = _xmlfile.read(output=str)
 
@@ -163,8 +166,8 @@ def change_gsm_versions(path:str, dest_version:int=23):
 
 def convert_gsm_archicad_versions(
     path:str,
-    source_version:int=25,
-    dest_version:int=23,
+    source_version:int=_default_version,
+    dest_version:int=_default_destversion,
     password:str=None,
     show_progress=False,
 ):
@@ -243,6 +246,39 @@ def convert_library_parts(
     )
 
     return _result
+
+
+def gsm_to_xml(
+    source_path:str,
+    version:int=_default_version,
+    password:str="",
+    dest_path:str=None,
+    show_progress=False,
+):
+    return convert_library_parts(
+        source_path=source_path,
+        version=version,
+        operation=convert_operation.GSM_TO_XML,
+        password=password,
+        dest_path=dest_path,
+        show_progress=show_progress,
+    )
+
+def xml_to_gsm(
+    source_path:str,
+    version:int=_default_version,
+    password:str="",
+    dest_path:str=None,
+    show_progress=False,
+):
+    return convert_library_parts(
+        source_path=source_path,
+        version=version,
+        operation=convert_operation.XML_TO_GSM,
+        password=password,
+        dest_path=dest_path,
+        show_progress=show_progress,
+    )
 
 if (__name__ == "__main__"):
     pass
