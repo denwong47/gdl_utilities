@@ -1,6 +1,7 @@
 import re
 import os
 import sys
+
 illegal_unicode_characters = [
     (0, 8),
     (11, 12),
@@ -33,4 +34,3 @@ def strip_invalid_characters(xml_text = None):
     _xml_illegal_character_regex = '[' + ''.join(_illegal_ranges) + ']'
     _illegal_xml_chars_re = re.compile(_xml_illegal_character_regex)
     return re.sub(_illegal_xml_chars_re, '', xml_text)
-
